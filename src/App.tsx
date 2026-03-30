@@ -1,25 +1,70 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
+import { AppProvider, useApp } from "@/contexts/AppContext";
+import { AppLayout } from "@/components/AppLayout";
+import LoginPage from "@/pages/LoginPage";
+import UserDashboard from "@/pages/user/UserDashboard";
+import CategoryPage from "@/pages/user/CategoryPage";
+import ExamPage from "@/pages/user/ExamPage";
+import ResultPage from "@/pages/user/ResultPage";
+import HistoryPage from "@/pages/user/HistoryPage";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import CategoryManagement from "@/pages/admin/CategoryManagement";
+import PeriodManagement from "@/pages/admin/PeriodManagement";
+import QuestionManagement from "@/pages/admin/QuestionManagement";
+import ResultMonitoring from "@/pages/admin/ResultMonitoring";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
+
+function AuthenticatedRoutes() {
+  const { currentUser } = useApp();
+
+  if (!currentUser) return <LoginPage />;
+
+  if (currentUser.role === 'admin') {
+    return (
+      <AppLayout>
+        <Routes>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/categories" element={<CategoryManagement />} />
+          <Route path="/admin/periods" element={<PeriodManagement />} />
+          <Route path="/admin/questions" element={<QuestionManagement />} />
+          <Route path="/admin/results" element={<ResultMonitoring />} />
+          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Routes>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<UserDashboard />} />
+        <Route path="/category/:categoryId" element={<CategoryPage />} />
+        <Route path="/exam/:categoryId/:periodId" element={<ExamPage />} />
+        <Route path="/result" element={<ResultPage />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AppLayout>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AppProvider>
+        <BrowserRouter>
+          <AuthenticatedRoutes />
+        </BrowserRouter>
+      </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
