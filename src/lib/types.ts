@@ -16,33 +16,36 @@ export interface Category {
   parentId: string | null;
 }
 
-export interface Period {
+export interface QuestionPackage {
   id: string;
-  categoryId: string;
   name: string;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
+  description: string;
+  categoryId: string;
+  duration: number; // minutes
+  targetQuestions?: number;
+  periodLabel?: string; // optional label e.g. "JFT April 2026"
+  isPublished: boolean;
+  createdAt: string;
 }
 
 export interface Question {
   id: string;
-  categoryId: string;
-  periodId: string;
+  packageId: string;
   text: string;
   options: string[];
-  correctAnswer: number; // index of correct option
+  correctAnswer: number;
+  explanation?: string;
 }
 
 export interface ExamResult {
   id: string;
   userId: string;
+  packageId: string;
   categoryId: string;
-  periodId: string;
   score: number;
   totalQuestions: number;
   correctAnswers: number;
-  answers: Record<string, number>; // questionId -> selected option index
+  answers: Record<string, number>;
   date: string;
 }
 
@@ -50,5 +53,5 @@ export interface ExamState {
   currentQuestionIndex: number;
   answers: Record<string, number>;
   startTime: number;
-  timeLimit: number; // in seconds
+  timeLimit: number;
 }
