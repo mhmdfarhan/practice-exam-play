@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 
 const ResultMonitoring = () => {
-  const { results, users, categories, periods, getCategoryById } = useApp();
+  const { results, users, getCategoryById, getPackageById } = useApp();
 
   return (
     <div>
