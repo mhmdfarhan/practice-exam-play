@@ -1,51 +1,109 @@
 
 
-# CBT Exam App — JLPT, JFT, SSW
+# Refactor: Period → Package-based CBT System
 
-## Overview
-A fully interactive Computer Based Test prototype for Japanese language exams (JLPT, JFT, SSW) with admin and user roles. All data is stored in-memory/localStorage using dummy data — no backend needed.
+## Summary
 
-## Pages & Features
+Major architectural shift: replace **Period as access gate** with **Question Package** as the core entity. Period becomes an optional label/tag. Add step-based package creation, rich question management with bulk actions, and 3 input methods (manual, JSON paste, CSV import).
 
-### Shared
-- **Login Page** — Role selector (Admin/User) with dummy accounts. Clean, professional login form.
+## Data Model Changes
 
-### 👤 User Flow (7 pages)
-1. **Dashboard** — Grid of exam categories (JLPT, JFT, SSW) with icons and descriptions
-2. **Category Page** — Shows selected category info; for SSW, shows sub-categories (Perawatan Lansia, Pengolahan Makanan, Pertanian)
-3. **Period Page** — Lists available periods with active/inactive badges; "Mulai Ujian" button only on active periods
-4. **Exam Page** *(core feature)* — Full CBT experience:
-   - Question display with multiple choice options
-   - Question navigation sidebar (numbered buttons showing answered/unanswered)
-   - Timer display
-   - Previous/Next navigation
-   - Submit confirmation dialog
-5. **Result Page** — Score display, correct/wrong count, percentage, pass/fail indicator
-6. **History Page** — Table of past exams with category, period, score, and date
+**New entity: `QuestionPackage`**
+```text
+QuestionPackage {
+  id, name, description, categoryId,
+  duration (minutes), targetQuestions (optional),
+  periodLabel (optional string), // e.g. "JFT April 2026"
+  isPublished (boolean), // draft mode support
+  createdAt
+}
+```
 
-### 🛠️ Admin Flow (5 pages)
-1. **Admin Dashboard** — Summary cards (total users, questions, exams taken) with simple charts
-2. **Category Management** — CRUD table for categories with parent/child support (SSW sub-categories)
-3. **Period Management** — CRUD table for periods with active/inactive toggle per category
-4. **Question Management** — CRUD for questions with category & period filters; each question has text + 4 options + correct answer
-5. **Result Monitoring** — Table of all user results filterable by user, category, period
+**Question** — change `periodId` → `packageId`. Add optional `explanation` field for pembahasan.
 
-## Design & UX
-- Clean, modern UI using shadcn/ui components
-- Sidebar navigation with role-based menu items (admin vs user)
-- Responsive layout
-- Japanese exam aesthetic — professional, focused, minimal distractions
-- Color scheme: Blue primary for trust/focus
+**ExamResult** — change `periodId` → `packageId`.
 
-## Data Architecture (In-Memory + localStorage)
-- Dummy data store with: categories, periods, questions, users, exam results
-- Pre-populated with realistic sample questions for each category
-- State persists across page refreshes via localStorage
-- Context provider for auth state and data management
+**Period entity** — removed entirely. Replaced by `periodLabel` string on package.
 
-## Key Behaviors
-- Only active periods allow exam access
-- Questions are tied to both category and period
-- Auto-scoring on submit with instant results
-- Exam history saved to localStorage
+## Files to Change
+
+### 1. `src/lib/types.ts`
+- Remove `Period` interface
+- Add `QuestionPackage` interface
+- Update `Question`: replace `periodId`/`categoryId` with `packageId`, add `explanation`
+- Update `ExamResult`: replace `periodId` with `packageId`
+
+### 2. `src/lib/dummy-data.ts`
+- Remove `dummyPeriods`
+- Add `dummyPackages` with realistic data (mapped from old periods)
+- Update `dummyQuestions` to reference `packageId`
+- Update `dummyResults`
+
+### 3. `src/contexts/AppContext.tsx`
+- Remove period CRUD, add package CRUD (`addPackage`, `updatePackage`, `deletePackage`)
+- Update helpers: `getPackagesByCategory`, `getQuestionsByPackage`
+- Remove `getPeriodsByCategory`
+
+### 4. Admin Pages
+
+**Remove:** `src/pages/admin/PeriodManagement.tsx`
+
+**New:** `src/pages/admin/PackageCreate.tsx` — 3-step wizard:
+- Step 1: Name, category, description
+- Step 2: Duration, target questions, optional period label, draft/publish toggle
+- Step 3: Summary → redirect to Manage Questions
+
+**New:** `src/pages/admin/PackageQuestions.tsx` — Question management within a package:
+- Package info header with question counter (e.g. "10 / 50 soal")
+- Question list with checkboxes for bulk select
+- Sticky bottom action bar on selection (delete selected, duplicate)
+- 3 input methods via tabs/modal:
+  - **Manual form**: question + options A–E + correct answer + explanation
+  - **Paste JSON**: textarea with validation + preview
+  - **Import CSV**: file upload with table preview before confirm
+- Duplicate question button per row
+
+**Update:** `src/pages/admin/QuestionManagement.tsx` → becomes package list view (grid of packages with edit/manage links)
+
+**Update:** `src/pages/admin/AdminDashboard.tsx` — replace period references with package counts
+
+**Update:** `src/pages/admin/CategoryManagement.tsx` — no period references
+
+**Update:** `src/pages/admin/ResultMonitoring.tsx` — show package name instead of period
+
+### 5. User Pages
+
+**Update:** `src/pages/user/UserDashboard.tsx` — show "Trending" section for packages with period labels, then "Semua Paket" section
+
+**Update:** `src/pages/user/CategoryPage.tsx`
+- Remove period listing with active/inactive gate
+- Show all published packages for the category
+- All packages are accessible (no active/inactive restriction)
+- Packages with `periodLabel` get a highlight badge
+
+**Update:** `src/pages/user/ExamPage.tsx` — load questions by `packageId` instead of `categoryId + periodId`
+
+**Update:** `src/pages/user/ResultPage.tsx` — show package name
+
+**Update:** `src/pages/user/HistoryPage.tsx` — show package name instead of period
+
+### 6. Routing & Sidebar
+
+**`src/App.tsx`:**
+- Remove `/admin/periods` route
+- Add `/admin/packages/new` → PackageCreate
+- Add `/admin/packages/:packageId/questions` → PackageQuestions
+- Change exam route to `/exam/:packageId`
+
+**`src/components/AppSidebar.tsx`:**
+- Replace "Periode" menu item with "Paket Soal" linking to `/admin/questions`
+
+## UX Highlights
+
+- **Draft mode**: packages can be saved without questions, only published ones visible to users
+- **Question counter**: shows progress toward target (e.g. "10 / 50 soal")
+- **Bulk actions**: Gmail-style checkbox select with sticky bottom bar
+- **3 input methods**: manual, JSON paste, CSV import — all within the package context
+- **Duplicate question**: one-click clone per question row
+- **Period as label**: optional tag that boosts visibility ("Trending" section) but never blocks access
 
