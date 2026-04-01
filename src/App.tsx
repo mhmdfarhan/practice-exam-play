@@ -18,6 +18,7 @@ import PackageCreate from "@/pages/admin/PackageCreate";
 import PackageQuestions from "@/pages/admin/PackageQuestions";
 import ResultMonitoring from "@/pages/admin/ResultMonitoring";
 import NotFound from "./pages/NotFound.tsx";
+import ComingSoon from "./pages/ComingSoon.tsx";
 
 const queryClient = new QueryClient();
 
@@ -64,7 +65,8 @@ const App = () => (
       <Sonner />
       <AppProvider>
         <BrowserRouter>
-          <AuthenticatedRoutes />
+          {/* <AuthenticatedRoutes /> */}
+          <ComingSoon />
         </BrowserRouter>
       </AppProvider>
     </TooltipProvider>
