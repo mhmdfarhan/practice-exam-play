@@ -12,20 +12,19 @@ import {
 import { ArrowLeft, ArrowRight, Clock, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const EXAM_TIME_LIMIT = 30 * 60; // 30 minutes
-
 const ExamPage = () => {
-  const { categoryId, periodId } = useParams();
-  const { getQuestionsByPeriod, getCategoryById, addResult, currentUser, periods } = useApp();
+  const { packageId } = useParams();
+  const { getQuestionsByPackage, getPackageById, getCategoryById, addResult, currentUser } = useApp();
   const navigate = useNavigate();
 
-  const questions = getQuestionsByPeriod(categoryId!, periodId!);
-  const category = getCategoryById(categoryId!);
-  const period = periods.find(p => p.id === periodId);
+  const pkg = getPackageById(packageId!);
+  const questions = getQuestionsByPackage(packageId!);
+  const category = pkg ? getCategoryById(pkg.categoryId) : undefined;
+  const timeLimit = (pkg?.duration || 30) * 60;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [timeLeft, setTimeLeft] = useState(EXAM_TIME_LIMIT);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
@@ -47,8 +46,8 @@ const ExamPage = () => {
     const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const result = {
       userId: currentUser!.id,
-      categoryId: categoryId!,
-      periodId: periodId!,
+      packageId: packageId!,
+      categoryId: pkg?.categoryId || '',
       score,
       totalQuestions: questions.length,
       correctAnswers: correct,
@@ -56,13 +55,13 @@ const ExamPage = () => {
       date: new Date().toISOString().split('T')[0],
     };
     addResult(result);
-    navigate(`/result`, { state: result });
-  }, [answers, questions, submitted, categoryId, periodId, currentUser]);
+    navigate('/result', { state: result });
+  }, [answers, questions, submitted, packageId, pkg, currentUser]);
 
   if (!questions.length) {
     return (
       <div className="text-center py-20">
-        <p className="text-xl text-muted-foreground">Belum ada soal untuk periode ini.</p>
+        <p className="text-xl text-muted-foreground">Belum ada soal untuk paket ini.</p>
         <Button className="mt-4" onClick={() => navigate(-1)}>Kembali</Button>
       </div>
     );
@@ -74,11 +73,10 @@ const ExamPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold">{category?.icon} {category?.name}</h1>
-          <p className="text-sm text-muted-foreground">{period?.name}</p>
+          <p className="text-sm text-muted-foreground">{pkg?.name}</p>
         </div>
         <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
           <Clock className="h-4 w-4" />
@@ -89,7 +87,6 @@ const ExamPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-6">
-        {/* Question */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Soal {currentIndex + 1} / {questions.length}</CardTitle>
@@ -139,7 +136,6 @@ const ExamPage = () => {
           </CardContent>
         </Card>
 
-        {/* Navigation sidebar */}
         <div className="space-y-3">
           <h3 className="font-semibold text-sm">Navigasi Soal</h3>
           <div className="grid grid-cols-5 gap-2">

@@ -1,16 +1,49 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const UserDashboard = () => {
-  const { categories } = useApp();
+  const { categories, packages } = useApp();
   const navigate = useNavigate();
   const rootCategories = categories.filter(c => c.parentId === null);
+
+  const trendingPackages = packages.filter(p => p.isPublished && p.periodLabel);
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
       <p className="text-muted-foreground mb-6">Pilih kategori ujian untuk memulai latihan</p>
+
+      {/* Trending section */}
+      {trendingPackages.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">🔥 Sedang Trending</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trendingPackages.map(pkg => {
+              const cat = categories.find(c => c.id === pkg.categoryId);
+              return (
+                <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-shadow border-primary/20" onClick={() => navigate(`/exam/${pkg.id}`)}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">{pkg.periodLabel}</Badge>
+                      <span className="text-sm text-muted-foreground">{pkg.duration} menit</span>
+                    </div>
+                    <CardTitle className="text-lg mt-2">{pkg.name}</CardTitle>
+                    <CardDescription>{cat?.icon} {cat?.name}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <span className="text-sm text-primary font-medium">Mulai Ujian →</span>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Categories */}
+      <h2 className="text-xl font-semibold mb-4">📚 Pilih Kategori</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rootCategories.map(cat => (
           <Card key={cat.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/category/${cat.id}`)}>
