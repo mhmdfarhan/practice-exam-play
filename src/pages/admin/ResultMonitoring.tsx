@@ -17,7 +17,7 @@ const ResultMonitoring = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Kategori</TableHead>
-                <TableHead>Periode</TableHead>
+                <TableHead>Paket</TableHead>
                 <TableHead>Skor</TableHead>
                 <TableHead>Benar/Total</TableHead>
                 <TableHead>Tanggal</TableHead>
