@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { useApp } from '@/contexts/AppContext';
-import { BookOpen, LayoutDashboard, FolderOpen, CalendarDays, HelpCircle, BarChart3, History, LogOut } from 'lucide-react';
+import { BookOpen, LayoutDashboard, FolderOpen, HelpCircle, BarChart3, History, LogOut, Package } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarHeader, useSidebar,
@@ -16,8 +16,7 @@ const userMenu = [
 const adminMenu = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Kategori', url: '/admin/categories', icon: FolderOpen },
-  { title: 'Periode', url: '/admin/periods', icon: CalendarDays },
-  { title: 'Soal', url: '/admin/questions', icon: HelpCircle },
+  { title: 'Paket Soal', url: '/admin/questions', icon: Package },
   { title: 'Hasil Ujian', url: '/admin/results', icon: BarChart3 },
 ];
 
@@ -25,7 +24,6 @@ export function AppSidebar() {
   const { currentUser, logout } = useApp();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const location = useLocation();
   const isAdmin = currentUser?.role === 'admin';
   const menu = isAdmin ? adminMenu : userMenu;
 

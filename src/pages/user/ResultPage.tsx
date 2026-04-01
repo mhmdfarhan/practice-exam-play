@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, Trophy } from 'lucide-react';
 const ResultPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { getCategoryById, periods } = useApp();
+  const { getCategoryById, getPackageById } = useApp();
   const result = location.state as any;
 
   if (!result) {
@@ -16,7 +16,7 @@ const ResultPage = () => {
   }
 
   const category = getCategoryById(result.categoryId);
-  const period = periods.find(p => p.id === result.periodId);
+  const pkg = getPackageById(result.packageId);
   const passed = result.score >= 60;
 
   return (
@@ -25,7 +25,7 @@ const ResultPage = () => {
         <Trophy className={`h-16 w-16 mx-auto ${passed ? 'text-yellow-500' : 'text-muted-foreground'}`} />
       </div>
       <h1 className="text-3xl font-bold mb-2">Hasil Ujian</h1>
-      <p className="text-muted-foreground mb-6">{category?.name} — {period?.name}</p>
+      <p className="text-muted-foreground mb-6">{category?.name} — {pkg?.name}</p>
 
       <Card className="mb-6">
         <CardHeader>

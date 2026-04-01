@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 
 const HistoryPage = () => {
-  const { currentUser, getResultsByUser, getCategoryById, periods } = useApp();
+  const { currentUser, getResultsByUser, getCategoryById, getPackageById } = useApp();
   const results = getResultsByUser(currentUser!.id);
 
   return (
@@ -20,7 +20,7 @@ const HistoryPage = () => {
               <TableRow>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Kategori</TableHead>
-                <TableHead>Periode</TableHead>
+                <TableHead>Paket</TableHead>
                 <TableHead>Skor</TableHead>
                 <TableHead>Benar/Total</TableHead>
                 <TableHead>Status</TableHead>
@@ -29,12 +29,12 @@ const HistoryPage = () => {
             <TableBody>
               {results.map(r => {
                 const cat = getCategoryById(r.categoryId);
-                const period = periods.find(p => p.id === r.periodId);
+                const pkg = getPackageById(r.packageId);
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{r.date}</TableCell>
                     <TableCell>{cat?.icon} {cat?.name}</TableCell>
-                    <TableCell>{period?.name}</TableCell>
+                    <TableCell>{pkg?.name}</TableCell>
                     <TableCell className="font-bold">{r.score}%</TableCell>
                     <TableCell>{r.correctAnswers}/{r.totalQuestions}</TableCell>
                     <TableCell>

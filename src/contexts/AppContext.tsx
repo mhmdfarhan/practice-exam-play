@@ -1,34 +1,31 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Category, Period, Question, ExamResult, UserRole } from '@/lib/types';
-import { dummyUsers, dummyCategories, dummyPeriods, dummyQuestions, dummyResults } from '@/lib/dummy-data';
+import { User, Category, QuestionPackage, Question, ExamResult } from '@/lib/types';
+import { dummyUsers, dummyCategories, dummyPackages, dummyQuestions, dummyResults } from '@/lib/dummy-data';
 
 interface AppContextType {
-  // Auth
   currentUser: User | null;
   login: (email: string, password: string) => boolean;
   logout: () => void;
-  // Data
   users: User[];
   categories: Category[];
-  periods: Period[];
+  packages: QuestionPackage[];
   questions: Question[];
   results: ExamResult[];
-  // CRUD
   addCategory: (cat: Omit<Category, 'id'>) => void;
   updateCategory: (cat: Category) => void;
   deleteCategory: (id: string) => void;
-  addPeriod: (p: Omit<Period, 'id'>) => void;
-  updatePeriod: (p: Period) => void;
-  deletePeriod: (id: string) => void;
+  addPackage: (p: Omit<QuestionPackage, 'id'>) => void;
+  updatePackage: (p: QuestionPackage) => void;
+  deletePackage: (id: string) => void;
   addQuestion: (q: Omit<Question, 'id'>) => void;
   updateQuestion: (q: Question) => void;
   deleteQuestion: (id: string) => void;
   addResult: (r: Omit<ExamResult, 'id'>) => void;
-  // Helpers
   getCategoryById: (id: string) => Category | undefined;
   getSubCategories: (parentId: string) => Category[];
-  getPeriodsByCategory: (categoryId: string) => Period[];
-  getQuestionsByPeriod: (categoryId: string, periodId: string) => Question[];
+  getPackagesByCategory: (categoryId: string) => QuestionPackage[];
+  getPackageById: (id: string) => QuestionPackage | undefined;
+  getQuestionsByPackage: (packageId: string) => Question[];
   getResultsByUser: (userId: string) => ExamResult[];
 }
 
@@ -45,12 +42,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(() => loadFromStorage('cbt_user', null));
   const [users] = useState<User[]>(dummyUsers);
   const [categories, setCategories] = useState<Category[]>(() => loadFromStorage('cbt_categories', dummyCategories));
-  const [periods, setPeriods] = useState<Period[]>(() => loadFromStorage('cbt_periods', dummyPeriods));
+  const [packages, setPackages] = useState<QuestionPackage[]>(() => loadFromStorage('cbt_packages', dummyPackages));
   const [questions, setQuestions] = useState<Question[]>(() => loadFromStorage('cbt_questions', dummyQuestions));
   const [results, setResults] = useState<ExamResult[]>(() => loadFromStorage('cbt_results', dummyResults));
 
   useEffect(() => { localStorage.setItem('cbt_categories', JSON.stringify(categories)); }, [categories]);
-  useEffect(() => { localStorage.setItem('cbt_periods', JSON.stringify(periods)); }, [periods]);
+  useEffect(() => { localStorage.setItem('cbt_packages', JSON.stringify(packages)); }, [packages]);
   useEffect(() => { localStorage.setItem('cbt_questions', JSON.stringify(questions)); }, [questions]);
   useEffect(() => { localStorage.setItem('cbt_results', JSON.stringify(results)); }, [results]);
   useEffect(() => { if (currentUser) localStorage.setItem('cbt_user', JSON.stringify(currentUser)); else localStorage.removeItem('cbt_user'); }, [currentUser]);
@@ -61,16 +58,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return false;
   };
   const logout = () => setCurrentUser(null);
-
   const uid = () => crypto.randomUUID();
 
   const addCategory = (c: Omit<Category, 'id'>) => setCategories(prev => [...prev, { ...c, id: uid() }]);
   const updateCategory = (c: Category) => setCategories(prev => prev.map(x => x.id === c.id ? c : x));
   const deleteCategory = (id: string) => setCategories(prev => prev.filter(x => x.id !== id));
 
-  const addPeriod = (p: Omit<Period, 'id'>) => setPeriods(prev => [...prev, { ...p, id: uid() }]);
-  const updatePeriod = (p: Period) => setPeriods(prev => prev.map(x => x.id === p.id ? p : x));
-  const deletePeriod = (id: string) => setPeriods(prev => prev.filter(x => x.id !== id));
+  const addPackage = (p: Omit<QuestionPackage, 'id'>) => setPackages(prev => [...prev, { ...p, id: uid() }]);
+  const updatePackage = (p: QuestionPackage) => setPackages(prev => prev.map(x => x.id === p.id ? p : x));
+  const deletePackage = (id: string) => setPackages(prev => prev.filter(x => x.id !== id));
 
   const addQuestion = (q: Omit<Question, 'id'>) => setQuestions(prev => [...prev, { ...q, id: uid() }]);
   const updateQuestion = (q: Question) => setQuestions(prev => prev.map(x => x.id === q.id ? q : x));
@@ -80,19 +76,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getCategoryById = (id: string) => categories.find(c => c.id === id);
   const getSubCategories = (parentId: string) => categories.filter(c => c.parentId === parentId);
-  const getPeriodsByCategory = (categoryId: string) => periods.filter(p => p.categoryId === categoryId);
-  const getQuestionsByPeriod = (categoryId: string, periodId: string) => questions.filter(q => q.categoryId === categoryId && q.periodId === periodId);
+  const getPackagesByCategory = (categoryId: string) => packages.filter(p => p.categoryId === categoryId);
+  const getPackageById = (id: string) => packages.find(p => p.id === id);
+  const getQuestionsByPackage = (packageId: string) => questions.filter(q => q.packageId === packageId);
   const getResultsByUser = (userId: string) => results.filter(r => r.userId === userId);
 
   return (
     <AppContext.Provider value={{
       currentUser, login, logout,
-      users, categories, periods, questions, results,
+      users, categories, packages, questions, results,
       addCategory, updateCategory, deleteCategory,
-      addPeriod, updatePeriod, deletePeriod,
+      addPackage, updatePackage, deletePackage,
       addQuestion, updateQuestion, deleteQuestion,
       addResult,
-      getCategoryById, getSubCategories, getPeriodsByCategory, getQuestionsByPeriod, getResultsByUser,
+      getCategoryById, getSubCategories, getPackagesByCategory, getPackageById, getQuestionsByPackage, getResultsByUser,
     }}>
       {children}
     </AppContext.Provider>

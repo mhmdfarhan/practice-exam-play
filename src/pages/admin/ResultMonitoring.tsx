@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 
 const ResultMonitoring = () => {
-  const { results, users, categories, periods, getCategoryById } = useApp();
+  const { results, users, getCategoryById, getPackageById } = useApp();
 
   return (
     <div>
@@ -17,7 +17,7 @@ const ResultMonitoring = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Kategori</TableHead>
-                <TableHead>Periode</TableHead>
+                <TableHead>Paket</TableHead>
                 <TableHead>Skor</TableHead>
                 <TableHead>Benar/Total</TableHead>
                 <TableHead>Tanggal</TableHead>
@@ -28,12 +28,12 @@ const ResultMonitoring = () => {
               {results.map(r => {
                 const user = users.find(u => u.id === r.userId);
                 const cat = getCategoryById(r.categoryId);
-                const per = periods.find(p => p.id === r.periodId);
+                const pkg = getPackageById(r.packageId);
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{user?.name}</TableCell>
                     <TableCell>{cat?.icon} {cat?.name}</TableCell>
-                    <TableCell>{per?.name}</TableCell>
+                    <TableCell>{pkg?.name}</TableCell>
                     <TableCell className="font-bold">{r.score}%</TableCell>
                     <TableCell>{r.correctAnswers}/{r.totalQuestions}</TableCell>
                     <TableCell>{r.date}</TableCell>
