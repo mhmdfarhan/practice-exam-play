@@ -65,8 +65,3 @@ export interface ExamState {
   startTime: number;
   timeLimit: number;
 }
-  currentQuestionIndex: number;
-  answers: Record<string, number>;
-  startTime: number;
-  timeLimit: number;
-}
