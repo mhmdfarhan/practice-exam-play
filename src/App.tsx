@@ -37,6 +37,7 @@ function AuthenticatedRoutes() {
           <Route path="/admin/questions" element={<QuestionManagement />} />
           <Route path="/admin/packages/new" element={<PackageCreate />} />
           <Route path="/admin/packages/:packageId/questions" element={<PackageQuestions />} />
+          <Route path="/admin/bank" element={<QuestionBank />} />
           <Route path="/admin/results" element={<ResultMonitoring />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
