@@ -1,109 +1,59 @@
 
 
-# Refactor: Period → Package-based CBT System
+# Modul Bank Soal untuk Admin
 
-## Summary
+## Overview
+Menambahkan **Bank Soal** sebagai entitas global tempat admin menyimpan soal-soal yang bisa dipakai ulang di berbagai paket. Saat menambahkan soal ke paket, admin bisa memilih dari bank soal **atau** input biasa (manual/JSON/CSV).
 
-Major architectural shift: replace **Period as access gate** with **Question Package** as the core entity. Period becomes an optional label/tag. Add step-based package creation, rich question management with bulk actions, and 3 input methods (manual, JSON paste, CSV import).
+## Data Model
 
-## Data Model Changes
+**New type: `BankQuestion`** — soal global tanpa `packageId`, tapi punya `categoryId` dan tags.
 
-**New entity: `QuestionPackage`**
 ```text
-QuestionPackage {
-  id, name, description, categoryId,
-  duration (minutes), targetQuestions (optional),
-  periodLabel (optional string), // e.g. "JFT April 2026"
-  isPublished (boolean), // draft mode support
-  createdAt
+BankQuestion {
+  id, text, options[], correctAnswer, explanation?,
+  categoryId, tags[]  // e.g. ["N5", "文法", "kaigo"]
 }
 ```
 
-**Question** — change `periodId` → `packageId`. Add optional `explanation` field for pembahasan.
-
-**ExamResult** — change `periodId` → `packageId`.
-
-**Period entity** — removed entirely. Replaced by `periodLabel` string on package.
-
-## Files to Change
+## Changes
 
 ### 1. `src/lib/types.ts`
-- Remove `Period` interface
-- Add `QuestionPackage` interface
-- Update `Question`: replace `periodId`/`categoryId` with `packageId`, add `explanation`
-- Update `ExamResult`: replace `periodId` with `packageId`
+- Add `BankQuestion` interface
 
 ### 2. `src/lib/dummy-data.ts`
-- Remove `dummyPeriods`
-- Add `dummyPackages` with realistic data (mapped from old periods)
-- Update `dummyQuestions` to reference `packageId`
-- Update `dummyResults`
+- Add `dummyBankQuestions` (~15 sample questions across categories with tags)
 
 ### 3. `src/contexts/AppContext.tsx`
-- Remove period CRUD, add package CRUD (`addPackage`, `updatePackage`, `deletePackage`)
-- Update helpers: `getPackagesByCategory`, `getQuestionsByPackage`
-- Remove `getPeriodsByCategory`
+- Add `bankQuestions` state with localStorage persistence
+- Add CRUD: `addBankQuestion`, `updateBankQuestion`, `deleteBankQuestion`
+- Add helper: `getBankQuestionsByCategory`
 
-### 4. Admin Pages
+### 4. New: `src/pages/admin/QuestionBank.tsx`
+Admin page for managing the bank soal:
+- Table of all bank questions with category filter + tag filter
+- Add/edit question modal (same manual form)
+- Import via JSON/CSV (same as PackageQuestions but saves to bank)
+- Bulk delete with checkbox selection
+- Search/filter by text
 
-**Remove:** `src/pages/admin/PeriodManagement.tsx`
+### 5. Update: `src/pages/admin/PackageQuestions.tsx`
+Add a 4th tab **"Bank Soal"** in the add-question dialog:
+- Shows searchable list of bank questions (filtered by package's category)
+- Checkbox multi-select
+- "Tambah X Soal dari Bank" button
+- Selected bank questions get copied into the package as regular `Question` entries
 
-**New:** `src/pages/admin/PackageCreate.tsx` — 3-step wizard:
-- Step 1: Name, category, description
-- Step 2: Duration, target questions, optional period label, draft/publish toggle
-- Step 3: Summary → redirect to Manage Questions
+### 6. `src/components/AppSidebar.tsx`
+- Add "Bank Soal" menu item for admin (icon: `Database`), linking to `/admin/bank`
 
-**New:** `src/pages/admin/PackageQuestions.tsx` — Question management within a package:
-- Package info header with question counter (e.g. "10 / 50 soal")
-- Question list with checkboxes for bulk select
-- Sticky bottom action bar on selection (delete selected, duplicate)
-- 3 input methods via tabs/modal:
-  - **Manual form**: question + options A–E + correct answer + explanation
-  - **Paste JSON**: textarea with validation + preview
-  - **Import CSV**: file upload with table preview before confirm
-- Duplicate question button per row
+### 7. `src/App.tsx`
+- Add route `/admin/bank` → `QuestionBank`
 
-**Update:** `src/pages/admin/QuestionManagement.tsx` → becomes package list view (grid of packages with edit/manage links)
-
-**Update:** `src/pages/admin/AdminDashboard.tsx` — replace period references with package counts
-
-**Update:** `src/pages/admin/CategoryManagement.tsx` — no period references
-
-**Update:** `src/pages/admin/ResultMonitoring.tsx` — show package name instead of period
-
-### 5. User Pages
-
-**Update:** `src/pages/user/UserDashboard.tsx` — show "Trending" section for packages with period labels, then "Semua Paket" section
-
-**Update:** `src/pages/user/CategoryPage.tsx`
-- Remove period listing with active/inactive gate
-- Show all published packages for the category
-- All packages are accessible (no active/inactive restriction)
-- Packages with `periodLabel` get a highlight badge
-
-**Update:** `src/pages/user/ExamPage.tsx` — load questions by `packageId` instead of `categoryId + periodId`
-
-**Update:** `src/pages/user/ResultPage.tsx` — show package name
-
-**Update:** `src/pages/user/HistoryPage.tsx` — show package name instead of period
-
-### 6. Routing & Sidebar
-
-**`src/App.tsx`:**
-- Remove `/admin/periods` route
-- Add `/admin/packages/new` → PackageCreate
-- Add `/admin/packages/:packageId/questions` → PackageQuestions
-- Change exam route to `/exam/:packageId`
-
-**`src/components/AppSidebar.tsx`:**
-- Replace "Periode" menu item with "Paket Soal" linking to `/admin/questions`
-
-## UX Highlights
-
-- **Draft mode**: packages can be saved without questions, only published ones visible to users
-- **Question counter**: shows progress toward target (e.g. "10 / 50 soal")
-- **Bulk actions**: Gmail-style checkbox select with sticky bottom bar
-- **3 input methods**: manual, JSON paste, CSV import — all within the package context
-- **Duplicate question**: one-click clone per question row
-- **Period as label**: optional tag that boosts visibility ("Trending" section) but never blocks access
+## UX Flow
+1. Admin goes to **Bank Soal** → adds/imports questions globally with tags
+2. Admin creates a package → goes to **Manage Questions**
+3. In the "Tambah Soal" dialog, picks the **Bank Soal** tab
+4. Searches/filters questions → selects with checkboxes → adds to package
+5. Questions are copied (not linked) — editing in package doesn't affect bank
 
