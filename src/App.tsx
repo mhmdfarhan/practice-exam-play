@@ -65,8 +65,8 @@ const App = () => (
       <Sonner />
       <AppProvider>
         <BrowserRouter>
-          {/* <AuthenticatedRoutes /> */}
-          <ComingSoon />
+          <AuthenticatedRoutes />
+          {/* <ComingSoon /> */}
         </BrowserRouter>
       </AppProvider>
     </TooltipProvider>
