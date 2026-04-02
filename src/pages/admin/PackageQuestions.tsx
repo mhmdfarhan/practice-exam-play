@@ -338,6 +338,65 @@ const PackageQuestions = () => {
                   </div>
                 )}
               </TabsContent>
+              <TabsContent value="bank" className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Cari soal di bank..." value={bankSearch} onChange={e => setBankSearch(e.target.value)} />
+                </div>
+                {availableBankQuestions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Tidak ada soal di bank untuk kategori ini</p>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto border rounded">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={bankSelected.size === availableBankQuestions.length && availableBankQuestions.length > 0}
+                              onCheckedChange={() => {
+                                if (bankSelected.size === availableBankQuestions.length) setBankSelected(new Set());
+                                else setBankSelected(new Set(availableBankQuestions.map(q => q.id)));
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead>Pertanyaan</TableHead>
+                          <TableHead>Tags</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {availableBankQuestions.map(q => (
+                          <TableRow key={q.id} className={cn(bankSelected.has(q.id) && 'bg-muted/50')}>
+                            <TableCell>
+                              <Checkbox checked={bankSelected.has(q.id)} onCheckedChange={() => {
+                                setBankSelected(prev => { const n = new Set(prev); n.has(q.id) ? n.delete(q.id) : n.add(q.id); return n; });
+                              }} />
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">{q.text}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {q.tags.map(t => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                {bankSelected.size > 0 && (
+                  <DialogFooter>
+                    <Button onClick={() => {
+                      availableBankQuestions.filter(q => bankSelected.has(q.id)).forEach(q => {
+                        addQuestion({ packageId: packageId!, text: q.text, options: [...q.options], correctAnswer: q.correctAnswer, explanation: q.explanation });
+                      });
+                      setBankSelected(new Set());
+                      setIsAddOpen(false);
+                    }}>
+                      Tambah {bankSelected.size} Soal dari Bank
+                    </Button>
+                  </DialogFooter>
+                )}
+              </TabsContent>
             </Tabs>
           )}
         </DialogContent>
