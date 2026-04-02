@@ -1,4 +1,4 @@
-import { Category, QuestionPackage, Question, User, ExamResult } from './types';
+import { Category, QuestionPackage, Question, User, ExamResult, BankQuestion } from './types';
 
 export const dummyUsers: User[] = [
   { id: 'admin-1', name: 'Admin CBT', email: 'admin@cbt.com', password: 'admin123', role: 'admin' },
