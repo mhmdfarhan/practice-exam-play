@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Trash2, Copy, FileJson, Upload, Pencil } from 'lucide-react';
-import { Question } from '@/lib/types';
+import { ArrowLeft, Plus, Trash2, Copy, FileJson, Upload, Pencil, Database, Search } from 'lucide-react';
+import { Question, BankQuestion } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const PackageQuestions = () => {
