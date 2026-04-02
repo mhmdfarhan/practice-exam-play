@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Trash2, Copy, FileJson, Upload, Pencil } from 'lucide-react';
-import { Question } from '@/lib/types';
+import { ArrowLeft, Plus, Trash2, Copy, FileJson, Upload, Pencil, Database, Search } from 'lucide-react';
+import { Question, BankQuestion } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const PackageQuestions = () => {
   const { packageId } = useParams();
   const navigate = useNavigate();
-  const { getPackageById, getQuestionsByPackage, getCategoryById, addQuestion, updateQuestion, deleteQuestion, packages } = useApp();
+  const { getPackageById, getQuestionsByPackage, getCategoryById, addQuestion, updateQuestion, deleteQuestion, packages, bankQuestions, getBankQuestionsByCategory } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pkg = getPackageById(packageId!);
@@ -33,6 +33,15 @@ const PackageQuestions = () => {
   const [csvPreview, setCsvPreview] = useState<Array<{ text: string; options: string[]; correctAnswer: number }>>([]);
   const [jsonPreview, setJsonPreview] = useState<Array<{ text: string; options: string[]; correctAnswer: number; explanation?: string }>>([]);
   const [importError, setImportError] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankSelected, setBankSelected] = useState<Set<string>>(new Set());
+
+  const availableBankQuestions = useMemo(() => {
+    if (!pkg) return [];
+    const bq = getBankQuestionsByCategory(pkg.categoryId);
+    if (!bankSearch) return bq;
+    return bq.filter(q => q.text.toLowerCase().includes(bankSearch.toLowerCase()));
+  }, [pkg, bankQuestions, bankSearch]);
 
   if (!pkg) return <div className="p-8">Paket tidak ditemukan</div>;
 
@@ -56,6 +65,8 @@ const PackageQuestions = () => {
     setCsvPreview([]);
     setJsonPreview([]);
     setImportError('');
+    setBankSearch('');
+    setBankSelected(new Set());
     setIsAddOpen(true);
   };
   const openEdit = (q: Question) => {
@@ -244,8 +255,9 @@ const PackageQuestions = () => {
             <Tabs value={importTab} onValueChange={setImportTab}>
               <TabsList className="w-full">
                 <TabsTrigger value="manual" className="flex-1">Manual</TabsTrigger>
-                <TabsTrigger value="json" className="flex-1"><FileJson className="mr-1 h-4 w-4" /> Paste JSON</TabsTrigger>
-                <TabsTrigger value="csv" className="flex-1"><Upload className="mr-1 h-4 w-4" /> Import CSV</TabsTrigger>
+                <TabsTrigger value="json" className="flex-1"><FileJson className="mr-1 h-4 w-4" /> JSON</TabsTrigger>
+                <TabsTrigger value="csv" className="flex-1"><Upload className="mr-1 h-4 w-4" /> CSV</TabsTrigger>
+                <TabsTrigger value="bank" className="flex-1"><Database className="mr-1 h-4 w-4" /> Bank Soal</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manual" className="space-y-4">
@@ -324,6 +336,65 @@ const PackageQuestions = () => {
                       <Button onClick={handleImportCsv}>Import {csvPreview.length} Soal</Button>
                     </DialogFooter>
                   </div>
+                )}
+              </TabsContent>
+              <TabsContent value="bank" className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder="Cari soal di bank..." value={bankSearch} onChange={e => setBankSearch(e.target.value)} />
+                </div>
+                {availableBankQuestions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Tidak ada soal di bank untuk kategori ini</p>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto border rounded">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={bankSelected.size === availableBankQuestions.length && availableBankQuestions.length > 0}
+                              onCheckedChange={() => {
+                                if (bankSelected.size === availableBankQuestions.length) setBankSelected(new Set());
+                                else setBankSelected(new Set(availableBankQuestions.map(q => q.id)));
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead>Pertanyaan</TableHead>
+                          <TableHead>Tags</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {availableBankQuestions.map(q => (
+                          <TableRow key={q.id} className={cn(bankSelected.has(q.id) && 'bg-muted/50')}>
+                            <TableCell>
+                              <Checkbox checked={bankSelected.has(q.id)} onCheckedChange={() => {
+                                setBankSelected(prev => { const n = new Set(prev); n.has(q.id) ? n.delete(q.id) : n.add(q.id); return n; });
+                              }} />
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">{q.text}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {q.tags.map(t => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                {bankSelected.size > 0 && (
+                  <DialogFooter>
+                    <Button onClick={() => {
+                      availableBankQuestions.filter(q => bankSelected.has(q.id)).forEach(q => {
+                        addQuestion({ packageId: packageId!, text: q.text, options: [...q.options], correctAnswer: q.correctAnswer, explanation: q.explanation });
+                      });
+                      setBankSelected(new Set());
+                      setIsAddOpen(false);
+                    }}>
+                      Tambah {bankSelected.size} Soal dari Bank
+                    </Button>
+                  </DialogFooter>
                 )}
               </TabsContent>
             </Tabs>

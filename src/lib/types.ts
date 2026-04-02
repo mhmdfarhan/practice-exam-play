@@ -49,6 +49,16 @@ export interface ExamResult {
   date: string;
 }
 
+export interface BankQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
+  categoryId: string;
+  tags: string[];
+}
+
 export interface ExamState {
   currentQuestionIndex: number;
   answers: Record<string, number>;

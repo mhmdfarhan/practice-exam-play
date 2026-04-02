@@ -1,4 +1,4 @@
-import { Category, QuestionPackage, Question, User, ExamResult } from './types';
+import { Category, QuestionPackage, Question, User, ExamResult, BankQuestion } from './types';
 
 export const dummyUsers: User[] = [
   { id: 'admin-1', name: 'Admin CBT', email: 'admin@cbt.com', password: 'admin123', role: 'admin' },
@@ -62,6 +62,24 @@ export const dummyQuestions: Question[] = [
   { id: 'q-agri-3', packageId: 'pkg-6', text: '「収穫」の意味は？', options: ['種を蒔く', '作物を取り入れる', '土を耕す', '水をやる'], correctAnswer: 1 },
   { id: 'q-agri-4', packageId: 'pkg-6', text: 'ビニールハウスの利点は？', options: ['コストが安い', '温度管理ができる', '害虫が増える', '水が不要'], correctAnswer: 1 },
   { id: 'q-agri-5', packageId: 'pkg-6', text: '有機農業とは何ですか？', options: ['化学肥料を大量に使う農業', '農薬や化学肥料を使わない農業', '機械だけで行う農業', '水を使わない農業'], correctAnswer: 1 },
+];
+
+export const dummyBankQuestions: BankQuestion[] = [
+  { id: 'bq-1', text: '「走る」の丁寧形は？', options: ['走ります', '走りた', '走るます', '走です'], correctAnswer: 0, categoryId: 'cat-jlpt', tags: ['N5', '文法'] },
+  { id: 'bq-2', text: '「あした」の漢字は？', options: ['明日', '今日', '昨日', '来日'], correctAnswer: 0, categoryId: 'cat-jlpt', tags: ['N5', '漢字'] },
+  { id: 'bq-3', text: '「つくえ」の上に本があります。「つくえ」は何ですか？', options: ['椅子', '机', '棚', '床'], correctAnswer: 1, categoryId: 'cat-jlpt', tags: ['N5', '語彙'] },
+  { id: 'bq-4', text: '「書く」のて形は？', options: ['書いて', '書きて', '書って', '書くて'], correctAnswer: 0, explanation: '「書く」はか行五段動詞。て形は「いて」になる。', categoryId: 'cat-jlpt', tags: ['N5', '文法'] },
+  { id: 'bq-5', text: '「高い」の反対語は？', options: ['低い', '安い', '小さい', '少ない'], correctAnswer: 0, categoryId: 'cat-jlpt', tags: ['N5', '語彙'] },
+  { id: 'bq-6', text: 'あいさつ：夜、別れるとき何と言いますか？', options: ['おはよう', 'こんにちは', 'おやすみなさい', 'いただきます'], correctAnswer: 2, categoryId: 'cat-jft', tags: ['A2', '会話'] },
+  { id: 'bq-7', text: '「いくら」は英語でどういう意味？', options: ['Where', 'When', 'How much', 'Who'], correctAnswer: 2, categoryId: 'cat-jft', tags: ['A2', '語彙'] },
+  { id: 'bq-8', text: '「でんわばんごう」は何ですか？', options: ['住所', '電話番号', '名前', '年齢'], correctAnswer: 1, categoryId: 'cat-jft', tags: ['A2', '語彙'] },
+  { id: 'bq-9', text: '「すみません、トイレはどこですか？」は何を聞いていますか？', options: ['時間', '場所', '名前', '値段'], correctAnswer: 1, categoryId: 'cat-jft', tags: ['A2', '会話'] },
+  { id: 'bq-10', text: '介護記録を書くとき最も大切なことは？', options: ['長く書く', '事実を正確に書く', '感想を書く', '略語を使う'], correctAnswer: 1, categoryId: 'cat-ssw-care', tags: ['kaigo', '記録'] },
+  { id: 'bq-11', text: '「移乗」とは何ですか？', options: ['食事の介助', 'ベッドから車椅子への移動', '入浴の介助', '排泄の介助'], correctAnswer: 1, categoryId: 'cat-ssw-care', tags: ['kaigo', '介護技術'] },
+  { id: 'bq-12', text: '食品のアレルギー表示義務がある食品は？', options: ['りんご', '小麦', 'キャベツ', 'にんじん'], correctAnswer: 1, categoryId: 'cat-ssw-food', tags: ['食品衛生', 'アレルギー'] },
+  { id: 'bq-13', text: '細菌が増えやすい温度帯は？', options: ['0-5°C', '10-60°C', '70-100°C', '100°C以上'], correctAnswer: 1, categoryId: 'cat-ssw-food', tags: ['食品衛生', 'HACCP'] },
+  { id: 'bq-14', text: '連作障害を防ぐ方法は？', options: ['同じ作物を植える', '輪作をする', '水を減らす', '肥料をやめる'], correctAnswer: 1, categoryId: 'cat-ssw-agri', tags: ['農業', '栽培'] },
+  { id: 'bq-15', text: '苗を植えるのに適切な時間帯は？', options: ['真昼', '早朝か夕方', '深夜', 'いつでも同じ'], correctAnswer: 1, categoryId: 'cat-ssw-agri', tags: ['農業', '栽培'] },
 ];
 
 export const dummyResults: ExamResult[] = [

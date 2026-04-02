@@ -16,6 +16,7 @@ import CategoryManagement from "@/pages/admin/CategoryManagement";
 import QuestionManagement from "@/pages/admin/QuestionManagement";
 import PackageCreate from "@/pages/admin/PackageCreate";
 import PackageQuestions from "@/pages/admin/PackageQuestions";
+import QuestionBank from "@/pages/admin/QuestionBank";
 import ResultMonitoring from "@/pages/admin/ResultMonitoring";
 import NotFound from "./pages/NotFound.tsx";
 import ComingSoon from "./pages/ComingSoon.tsx";
@@ -36,6 +37,7 @@ function AuthenticatedRoutes() {
           <Route path="/admin/questions" element={<QuestionManagement />} />
           <Route path="/admin/packages/new" element={<PackageCreate />} />
           <Route path="/admin/packages/:packageId/questions" element={<PackageQuestions />} />
+          <Route path="/admin/bank" element={<QuestionBank />} />
           <Route path="/admin/results" element={<ResultMonitoring />} />
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
