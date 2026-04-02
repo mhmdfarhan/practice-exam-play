@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { useApp } from '@/contexts/AppContext';
-import { BookOpen, LayoutDashboard, FolderOpen, HelpCircle, BarChart3, History, LogOut, Package } from 'lucide-react';
+import { BookOpen, LayoutDashboard, FolderOpen, HelpCircle, BarChart3, History, LogOut, Package, Database } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarHeader, useSidebar,
