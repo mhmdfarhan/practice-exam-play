@@ -65,6 +65,8 @@ const PackageQuestions = () => {
     setCsvPreview([]);
     setJsonPreview([]);
     setImportError('');
+    setBankSearch('');
+    setBankSelected(new Set());
     setIsAddOpen(true);
   };
   const openEdit = (q: Question) => {
