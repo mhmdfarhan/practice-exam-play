@@ -16,6 +16,7 @@ import CategoryManagement from "@/pages/admin/CategoryManagement";
 import QuestionManagement from "@/pages/admin/QuestionManagement";
 import PackageCreate from "@/pages/admin/PackageCreate";
 import PackageQuestions from "@/pages/admin/PackageQuestions";
+import QuestionBank from "@/pages/admin/QuestionBank";
 import ResultMonitoring from "@/pages/admin/ResultMonitoring";
 import NotFound from "./pages/NotFound.tsx";
 import ComingSoon from "./pages/ComingSoon.tsx";
