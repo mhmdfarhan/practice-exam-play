@@ -11,6 +11,7 @@ interface AppContextType {
   packages: QuestionPackage[];
   questions: Question[];
   results: ExamResult[];
+  bankQuestions: BankQuestion[];
   addCategory: (cat: Omit<Category, 'id'>) => void;
   updateCategory: (cat: Category) => void;
   deleteCategory: (id: string) => void;
@@ -21,6 +22,10 @@ interface AppContextType {
   updateQuestion: (q: Question) => void;
   deleteQuestion: (id: string) => void;
   addResult: (r: Omit<ExamResult, 'id'>) => void;
+  addBankQuestion: (q: Omit<BankQuestion, 'id'>) => void;
+  updateBankQuestion: (q: BankQuestion) => void;
+  deleteBankQuestion: (id: string) => void;
+  getBankQuestionsByCategory: (categoryId: string) => BankQuestion[];
   getCategoryById: (id: string) => Category | undefined;
   getSubCategories: (parentId: string) => Category[];
   getPackagesByCategory: (categoryId: string) => QuestionPackage[];
