@@ -33,6 +33,15 @@ const PackageQuestions = () => {
   const [csvPreview, setCsvPreview] = useState<Array<{ text: string; options: string[]; correctAnswer: number }>>([]);
   const [jsonPreview, setJsonPreview] = useState<Array<{ text: string; options: string[]; correctAnswer: number; explanation?: string }>>([]);
   const [importError, setImportError] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [bankSelected, setBankSelected] = useState<Set<string>>(new Set());
+
+  const availableBankQuestions = useMemo(() => {
+    if (!pkg) return [];
+    const bq = getBankQuestionsByCategory(pkg.categoryId);
+    if (!bankSearch) return bq;
+    return bq.filter(q => q.text.toLowerCase().includes(bankSearch.toLowerCase()));
+  }, [pkg, bankQuestions, bankSearch]);
 
   if (!pkg) return <div className="p-8">Paket tidak ditemukan</div>;
 
