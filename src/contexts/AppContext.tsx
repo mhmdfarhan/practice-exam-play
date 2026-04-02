@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Category, QuestionPackage, Question, ExamResult } from '@/lib/types';
-import { dummyUsers, dummyCategories, dummyPackages, dummyQuestions, dummyResults } from '@/lib/dummy-data';
+import { User, Category, QuestionPackage, Question, ExamResult, BankQuestion } from '@/lib/types';
+import { dummyUsers, dummyCategories, dummyPackages, dummyQuestions, dummyResults, dummyBankQuestions } from '@/lib/dummy-data';
 
 interface AppContextType {
   currentUser: User | null;

@@ -17,6 +17,7 @@ const adminMenu = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Kategori', url: '/admin/categories', icon: FolderOpen },
   { title: 'Paket Soal', url: '/admin/questions', icon: Package },
+  { title: 'Bank Soal', url: '/admin/bank', icon: Database },
   { title: 'Hasil Ujian', url: '/admin/results', icon: BarChart3 },
 ];
 
