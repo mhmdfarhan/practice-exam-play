@@ -81,6 +81,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addResult = (r: Omit<ExamResult, 'id'>) => setResults(prev => [...prev, { ...r, id: uid() }]);
 
+  const addBankQuestion = (q: Omit<BankQuestion, 'id'>) => setBankQuestions(prev => [...prev, { ...q, id: uid() }]);
+  const updateBankQuestion = (q: BankQuestion) => setBankQuestions(prev => prev.map(x => x.id === q.id ? q : x));
+  const deleteBankQuestion = (id: string) => setBankQuestions(prev => prev.filter(x => x.id !== id));
+  const getBankQuestionsByCategory = (categoryId: string) => bankQuestions.filter(q => q.categoryId === categoryId);
+
   const getCategoryById = (id: string) => categories.find(c => c.id === id);
   const getSubCategories = (parentId: string) => categories.filter(c => c.parentId === parentId);
   const getPackagesByCategory = (categoryId: string) => packages.filter(p => p.categoryId === categoryId);
@@ -91,11 +96,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider value={{
       currentUser, login, logout,
-      users, categories, packages, questions, results,
+      users, categories, packages, questions, results, bankQuestions,
       addCategory, updateCategory, deleteCategory,
       addPackage, updatePackage, deletePackage,
       addQuestion, updateQuestion, deleteQuestion,
       addResult,
+      addBankQuestion, updateBankQuestion, deleteBankQuestion, getBankQuestionsByCategory,
       getCategoryById, getSubCategories, getPackagesByCategory, getPackageById, getQuestionsByPackage, getResultsByUser,
     }}>
       {children}
