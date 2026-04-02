@@ -50,11 +50,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [packages, setPackages] = useState<QuestionPackage[]>(() => loadFromStorage('cbt_packages', dummyPackages));
   const [questions, setQuestions] = useState<Question[]>(() => loadFromStorage('cbt_questions', dummyQuestions));
   const [results, setResults] = useState<ExamResult[]>(() => loadFromStorage('cbt_results', dummyResults));
+  const [bankQuestions, setBankQuestions] = useState<BankQuestion[]>(() => loadFromStorage('cbt_bank', dummyBankQuestions));
 
   useEffect(() => { localStorage.setItem('cbt_categories', JSON.stringify(categories)); }, [categories]);
   useEffect(() => { localStorage.setItem('cbt_packages', JSON.stringify(packages)); }, [packages]);
   useEffect(() => { localStorage.setItem('cbt_questions', JSON.stringify(questions)); }, [questions]);
   useEffect(() => { localStorage.setItem('cbt_results', JSON.stringify(results)); }, [results]);
+  useEffect(() => { localStorage.setItem('cbt_bank', JSON.stringify(bankQuestions)); }, [bankQuestions]);
   useEffect(() => { if (currentUser) localStorage.setItem('cbt_user', JSON.stringify(currentUser)); else localStorage.removeItem('cbt_user'); }, [currentUser]);
 
   const login = (email: string, password: string) => {
