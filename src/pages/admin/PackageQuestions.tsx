@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 const PackageQuestions = () => {
   const { packageId } = useParams();
   const navigate = useNavigate();
-  const { getPackageById, getQuestionsByPackage, getCategoryById, addQuestion, updateQuestion, deleteQuestion, packages } = useApp();
+  const { getPackageById, getQuestionsByPackage, getCategoryById, addQuestion, updateQuestion, deleteQuestion, packages, bankQuestions, getBankQuestionsByCategory } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pkg = getPackageById(packageId!);
