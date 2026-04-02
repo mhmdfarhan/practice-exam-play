@@ -255,8 +255,9 @@ const PackageQuestions = () => {
             <Tabs value={importTab} onValueChange={setImportTab}>
               <TabsList className="w-full">
                 <TabsTrigger value="manual" className="flex-1">Manual</TabsTrigger>
-                <TabsTrigger value="json" className="flex-1"><FileJson className="mr-1 h-4 w-4" /> Paste JSON</TabsTrigger>
-                <TabsTrigger value="csv" className="flex-1"><Upload className="mr-1 h-4 w-4" /> Import CSV</TabsTrigger>
+                <TabsTrigger value="json" className="flex-1"><FileJson className="mr-1 h-4 w-4" /> JSON</TabsTrigger>
+                <TabsTrigger value="csv" className="flex-1"><Upload className="mr-1 h-4 w-4" /> CSV</TabsTrigger>
+                <TabsTrigger value="bank" className="flex-1"><Database className="mr-1 h-4 w-4" /> Bank Soal</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manual" className="space-y-4">
