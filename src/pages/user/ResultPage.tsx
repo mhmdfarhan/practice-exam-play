@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
+import { useCategories } from '@/hooks/useCategories';
+import { usePackages } from '@/hooks/usePackages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Trophy } from 'lucide-react';
@@ -7,7 +8,8 @@ import { CheckCircle2, XCircle, Trophy } from 'lucide-react';
 const ResultPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { getCategoryById, getPackageById } = useApp();
+  const { data: categories = [] } = useCategories();
+  const { data: packages = [] } = usePackages();
   const result = location.state as any;
 
   if (!result) {
@@ -15,8 +17,8 @@ const ResultPage = () => {
     return null;
   }
 
-  const category = getCategoryById(result.categoryId);
-  const pkg = getPackageById(result.packageId);
+  const category = categories.find(c => c.id === result.category_id);
+  const pkg = packages.find(p => p.id === result.package_id);
   const passed = result.score >= 60;
 
   return (
@@ -29,27 +31,16 @@ const ResultPage = () => {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className={`text-5xl ${passed ? 'text-green-600' : 'text-destructive'}`}>
-            {result.score}%
-          </CardTitle>
+          <CardTitle className={`text-5xl ${passed ? 'text-green-600' : 'text-destructive'}`}>{result.score}%</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className={`inline-block px-4 py-1 rounded-full text-sm font-medium ${passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
             {passed ? '✅ LULUS' : '❌ TIDAK LULUS'}
           </div>
           <div className="flex justify-center gap-8 pt-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <span className="font-medium">{result.correctAnswers} Benar</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-destructive" />
-              <span className="font-medium">{result.totalQuestions - result.correctAnswers} Salah</span>
-            </div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-green-600" /><span className="font-medium">{result.correct_answers} Benar</span></div>
+            <div className="flex items-center gap-2"><XCircle className="h-5 w-5 text-destructive" /><span className="font-medium">{result.total_questions - result.correct_answers} Salah</span></div>
           </div>
-          <p className="text-sm text-muted-foreground pt-2">
-            {result.correctAnswers} dari {result.totalQuestions} soal dijawab benar
-          </p>
         </CardContent>
       </Card>
 

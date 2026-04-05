@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePackages } from '@/hooks/usePackages';
+import { useCategories } from '@/hooks/useCategories';
+import { useQuestions } from '@/hooks/useQuestions';
+import { useAddExamResult } from '@/hooks/useExamResults';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,12 +18,15 @@ import { cn } from '@/lib/utils';
 
 const ExamPage = () => {
   const { packageId } = useParams();
-  const { getQuestionsByPackage, getPackageById, getCategoryById, addResult, currentUser } = useApp();
+  const { profile } = useAuth();
+  const { data: packages = [] } = usePackages();
+  const { data: categories = [] } = useCategories();
+  const { data: questions = [] } = useQuestions(packageId);
+  const addResult = useAddExamResult();
   const navigate = useNavigate();
 
-  const pkg = getPackageById(packageId!);
-  const questions = getQuestionsByPackage(packageId!);
-  const category = pkg ? getCategoryById(pkg.categoryId) : undefined;
+  const pkg = packages.find(p => p.id === packageId);
+  const category = pkg ? categories.find(c => c.id === pkg.category_id) : undefined;
   const timeLimit = (pkg?.duration || 30) * 60;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,24 +46,24 @@ const ExamPage = () => {
   }, [submitted]);
 
   const handleSubmit = useCallback(() => {
-    if (submitted) return;
+    if (submitted || !profile) return;
     setSubmitted(true);
     let correct = 0;
-    questions.forEach(q => { if (answers[q.id] === q.correctAnswer) correct++; });
+    questions.forEach(q => { if (answers[q.id] === q.correct_answer) correct++; });
     const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const result = {
-      userId: currentUser!.id,
-      packageId: packageId!,
-      categoryId: pkg?.categoryId || '',
+      user_id: profile.id,
+      package_id: packageId!,
+      category_id: pkg?.category_id || '',
       score,
-      totalQuestions: questions.length,
-      correctAnswers: correct,
+      total_questions: questions.length,
+      correct_answers: correct,
       answers,
       date: new Date().toISOString().split('T')[0],
     };
-    addResult(result);
+    addResult.mutate(result);
     navigate('/result', { state: result });
-  }, [answers, questions, submitted, packageId, pkg, currentUser]);
+  }, [answers, questions, submitted, packageId, pkg, profile]);
 
   if (!questions.length) {
     return (
@@ -88,9 +95,7 @@ const ExamPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Soal {currentIndex + 1} / {questions.length}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-lg">Soal {currentIndex + 1} / {questions.length}</CardTitle></CardHeader>
           <CardContent className="space-y-6">
             <p className="text-lg">{current.text}</p>
             <RadioGroup
@@ -109,21 +114,14 @@ const ExamPage = () => {
                 <ArrowLeft className="mr-2 h-4 w-4" /> Sebelumnya
               </Button>
               {currentIndex < questions.length - 1 ? (
-                <Button onClick={() => setCurrentIndex(i => i + 1)}>
-                  Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Button onClick={() => setCurrentIndex(i => i + 1)}>Selanjutnya <ArrowRight className="ml-2 h-4 w-4" /></Button>
               ) : (
                 <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button><Send className="mr-2 h-4 w-4" /> Submit Ujian</Button>
-                  </AlertDialogTrigger>
+                  <AlertDialogTrigger asChild><Button><Send className="mr-2 h-4 w-4" /> Submit Ujian</Button></AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Submit Ujian?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Anda telah menjawab {Object.keys(answers).length} dari {questions.length} soal.
-                        Setelah submit, jawaban tidak bisa diubah.
-                      </AlertDialogDescription>
+                      <AlertDialogDescription>Anda telah menjawab {Object.keys(answers).length} dari {questions.length} soal.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Batal</AlertDialogCancel>
@@ -140,32 +138,17 @@ const ExamPage = () => {
           <h3 className="font-semibold text-sm">Navigasi Soal</h3>
           <div className="grid grid-cols-5 gap-2">
             {questions.map((q, i) => (
-              <Button
-                key={q.id}
-                variant={i === currentIndex ? 'default' : answers[q.id] !== undefined ? 'secondary' : 'outline'}
-                size="sm"
-                className="h-9 w-9 p-0"
-                onClick={() => setCurrentIndex(i)}
-              >
+              <Button key={q.id} variant={i === currentIndex ? 'default' : answers[q.id] !== undefined ? 'secondary' : 'outline'} size="sm" className="h-9 w-9 p-0" onClick={() => setCurrentIndex(i)}>
                 {i + 1}
               </Button>
             ))}
           </div>
-          <div className="text-xs text-muted-foreground space-y-1 mt-4">
-            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-primary" /> Soal saat ini</div>
-            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-secondary" /> Sudah dijawab</div>
-            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded border" /> Belum dijawab</div>
-          </div>
           <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button className="w-full mt-4" variant="default"><Send className="mr-2 h-4 w-4" /> Submit</Button>
-            </AlertDialogTrigger>
+            <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="default"><Send className="mr-2 h-4 w-4" /> Submit</Button></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Submit Ujian?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Anda telah menjawab {Object.keys(answers).length} dari {questions.length} soal.
-                </AlertDialogDescription>
+                <AlertDialogDescription>Anda telah menjawab {Object.keys(answers).length} dari {questions.length} soal.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Batal</AlertDialogCancel>

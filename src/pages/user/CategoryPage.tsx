@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
+import { useCategories } from '@/hooks/useCategories';
+import { usePackages } from '@/hooks/usePackages';
+import { useQuestions } from '@/hooks/useQuestions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,17 +9,18 @@ import { ArrowLeft } from 'lucide-react';
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
-  const { getCategoryById, getSubCategories, getPackagesByCategory, questions } = useApp();
+  const { data: categories = [] } = useCategories();
+  const { data: packages = [] } = usePackages();
   const navigate = useNavigate();
 
-  const category = getCategoryById(categoryId!);
+  const category = categories.find(c => c.id === categoryId);
   if (!category) return <div>Kategori tidak ditemukan</div>;
 
-  const subCategories = getSubCategories(category.id);
+  const subCategories = categories.filter(c => c.parent_id === category.id);
   const hasSubCategories = subCategories.length > 0;
 
   if (!hasSubCategories) {
-    const pkgs = getPackagesByCategory(category.id).filter(p => p.isPublished);
+    const pkgs = packages.filter(p => p.category_id === category.id && p.is_published);
     return (
       <div>
         <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
@@ -30,26 +33,23 @@ const CategoryPage = () => {
           <p className="text-muted-foreground">Belum ada paket soal tersedia.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pkgs.map(pkg => {
-              const qCount = questions.filter(q => q.packageId === pkg.id).length;
-              return (
-                <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/exam/${pkg.id}`)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                      {pkg.periodLabel && <Badge variant="outline">{pkg.periodLabel}</Badge>}
-                    </div>
-                    <CardDescription>{pkg.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{qCount} soal · {pkg.duration} menit</span>
-                      <Button size="sm">Mulai Ujian</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {pkgs.map(pkg => (
+              <Card key={pkg.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/exam/${pkg.id}`)}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                    {pkg.period_label && <Badge variant="outline">{pkg.period_label}</Badge>}
+                  </div>
+                  <CardDescription>{pkg.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">{pkg.duration} menit</span>
+                    <Button size="sm">Mulai Ujian</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </div>

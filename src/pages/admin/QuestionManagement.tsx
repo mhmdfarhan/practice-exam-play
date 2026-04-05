@@ -1,20 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '@/contexts/AppContext';
+import { usePackages, useDeletePackage } from '@/hooks/usePackages';
+import { useCategories } from '@/hooks/useCategories';
+import { useAllQuestions } from '@/hooks/useQuestions';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, FileText, Eye } from 'lucide-react';
+import { Plus, Trash2, FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 
 const QuestionManagement = () => {
-  const { packages, categories, questions, deletePackage, getCategoryById } = useApp();
+  const { data: packages = [] } = usePackages();
+  const { data: categories = [] } = useCategories();
+  const { data: questions = [] } = useAllQuestions();
+  const deletePackage = useDeletePackage();
   const navigate = useNavigate();
   const [filterCat, setFilterCat] = useState('all');
 
-  const leafCategories = categories.filter(c => !categories.some(ch => ch.parentId === c.id));
-  const filteredPackages = filterCat === 'all' ? packages : packages.filter(p => p.categoryId === filterCat);
+  const leafCategories = categories.filter(c => !categories.some(ch => ch.parent_id === c.id));
+  const filteredPackages = filterCat === 'all' ? packages : packages.filter(p => p.category_id === filterCat);
 
   return (
     <div>
@@ -50,20 +54,20 @@ const QuestionManagement = () => {
             {filteredPackages.length === 0 ? (
               <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Belum ada paket soal</TableCell></TableRow>
             ) : filteredPackages.map(pkg => {
-              const cat = getCategoryById(pkg.categoryId);
-              const qCount = questions.filter(q => q.packageId === pkg.id).length;
+              const cat = categories.find(c => c.id === pkg.category_id);
+              const qCount = questions.filter(q => q.package_id === pkg.id).length;
               return (
                 <TableRow key={pkg.id}>
                   <TableCell className="font-medium">{pkg.name}</TableCell>
                   <TableCell>{cat?.icon} {cat?.name}</TableCell>
                   <TableCell>{pkg.duration} menit</TableCell>
-                  <TableCell>{qCount}{pkg.targetQuestions ? ` / ${pkg.targetQuestions}` : ''}</TableCell>
-                  <TableCell><Badge variant={pkg.isPublished ? 'default' : 'secondary'}>{pkg.isPublished ? 'Published' : 'Draft'}</Badge></TableCell>
-                  <TableCell>{pkg.periodLabel ? <Badge variant="outline">{pkg.periodLabel}</Badge> : '—'}</TableCell>
+                  <TableCell>{qCount}{pkg.target_questions ? ` / ${pkg.target_questions}` : ''}</TableCell>
+                  <TableCell><Badge variant={pkg.is_published ? 'default' : 'secondary'}>{pkg.is_published ? 'Published' : 'Draft'}</Badge></TableCell>
+                  <TableCell>{pkg.period_label ? <Badge variant="outline">{pkg.period_label}</Badge> : '—'}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/packages/${pkg.id}/questions`)}><FileText className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deletePackage(pkg.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deletePackage.mutate(pkg.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

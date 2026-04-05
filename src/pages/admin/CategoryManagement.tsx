@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
+import { useCategories, useAddCategory, useUpdateCategory, useDeleteCategory, Category } from '@/hooks/useCategories';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,33 +7,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { Category } from '@/lib/types';
 
 const CategoryManagement = () => {
-  const { categories, addCategory, updateCategory, deleteCategory } = useApp();
+  const { data: categories = [] } = useCategories();
+  const addCategory = useAddCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
+
   const [editItem, setEditItem] = useState<Category | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', icon: '📝', parentId: '' });
+  const [form, setForm] = useState({ name: '', description: '', icon: '📝', parent_id: '' });
 
-  const rootCategories = categories.filter(c => c.parentId === null);
+  const rootCategories = categories.filter(c => c.parent_id === null);
 
   const openAdd = () => {
     setEditItem(null);
-    setForm({ name: '', description: '', icon: '📝', parentId: '' });
+    setForm({ name: '', description: '', icon: '📝', parent_id: '' });
     setIsOpen(true);
   };
 
   const openEdit = (c: Category) => {
     setEditItem(c);
-    setForm({ name: c.name, description: c.description, icon: c.icon, parentId: c.parentId || '' });
+    setForm({ name: c.name, description: c.description, icon: c.icon, parent_id: c.parent_id || '' });
     setIsOpen(true);
   };
 
   const handleSave = () => {
+    const payload = { ...form, parent_id: form.parent_id || null };
     if (editItem) {
-      updateCategory({ ...editItem, ...form, parentId: form.parentId || null });
+      updateCategory.mutate({ ...editItem, ...payload });
     } else {
-      addCategory({ ...form, parentId: form.parentId || null });
+      addCategory.mutate(payload);
     }
     setIsOpen(false);
   };
@@ -56,7 +60,7 @@ const CategoryManagement = () => {
               <div><Label>Deskripsi</Label><Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div>
                 <Label>Parent Kategori</Label>
-                <Select value={form.parentId} onValueChange={val => setForm(f => ({ ...f, parentId: val === '_none' ? '' : val }))}>
+                <Select value={form.parent_id} onValueChange={val => setForm(f => ({ ...f, parent_id: val === '_none' ? '' : val }))}>
                   <SelectTrigger><SelectValue placeholder="Tidak ada (root)" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">Tidak ada (root)</SelectItem>
@@ -89,11 +93,11 @@ const CategoryManagement = () => {
                 <TableCell>{c.icon}</TableCell>
                 <TableCell className="font-medium">{c.name}</TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{c.description}</TableCell>
-                <TableCell>{c.parentId ? categories.find(p => p.id === c.parentId)?.name : '—'}</TableCell>
+                <TableCell>{c.parent_id ? categories.find(p => p.id === c.parent_id)?.name : '—'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteCategory(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteCategory.mutate(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </TableCell>
               </TableRow>

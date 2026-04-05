@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
-import { useApp } from '@/contexts/AppContext';
+import { useCategories } from '@/hooks/useCategories';
+import { useBankQuestions, useAddBankQuestion, useUpdateBankQuestion, useDeleteBankQuestion, BankQuestion } from '@/hooks/useBankQuestions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,12 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Search, FileJson, Upload, X } from 'lucide-react';
-import { BankQuestion } from '@/lib/types';
+import { Plus, Trash2, Pencil, Search, FileJson, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const QuestionBank = () => {
-  const { bankQuestions, categories, addBankQuestion, updateBankQuestion, deleteBankQuestion, getCategoryById } = useApp();
+  const { data: categories = [] } = useCategories();
+  const { data: bankQuestions = [] } = useBankQuestions();
+  const addBankQuestion = useAddBankQuestion();
+  const updateBankQuestion = useUpdateBankQuestion();
+  const deleteBankQuestion = useDeleteBankQuestion();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -29,8 +33,6 @@ const QuestionBank = () => {
   const [importError, setImportError] = useState('');
   const [importCategoryId, setImportCategoryId] = useState('');
   const [importTags, setImportTags] = useState('');
-
-  // Filters
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterTag, setFilterTag] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,14 +45,12 @@ const QuestionBank = () => {
 
   const filtered = useMemo(() => {
     return bankQuestions.filter(q => {
-      if (filterCategory !== 'all' && q.categoryId !== filterCategory) return false;
+      if (filterCategory !== 'all' && q.category_id !== filterCategory) return false;
       if (filterTag !== 'all' && !q.tags.includes(filterTag)) return false;
       if (searchQuery && !q.text.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     });
   }, [bankQuestions, filterCategory, filterTag, searchQuery]);
-
-  const leafCategories = categories.filter(c => c.parentId !== null || !categories.some(x => x.parentId === c.id));
 
   const toggleSelect = (id: string) => {
     setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -60,17 +60,18 @@ const QuestionBank = () => {
     else setSelected(new Set(filtered.map(q => q.id)));
   };
 
+  const parseTags = (s: string) => s.split(',').map(t => t.trim()).filter(Boolean);
+
   const openAdd = () => {
     setEditItem(null);
     setForm({ text: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', categoryId: '', tags: '' });
-    setImportTab('manual');
-    setJsonInput(''); setJsonPreview([]); setCsvPreview([]); setImportError('');
+    setImportTab('manual'); setJsonInput(''); setJsonPreview([]); setCsvPreview([]); setImportError('');
     setImportCategoryId(''); setImportTags('');
     setIsDialogOpen(true);
   };
   const openEdit = (q: BankQuestion) => {
     setEditItem(q);
-    setForm({ text: q.text, options: [...q.options], correctAnswer: q.correctAnswer, explanation: q.explanation || '', categoryId: q.categoryId, tags: q.tags.join(', ') });
+    setForm({ text: q.text, options: [...q.options], correctAnswer: q.correct_answer, explanation: q.explanation || '', categoryId: q.category_id, tags: q.tags.join(', ') });
     setImportTab('manual');
     setIsDialogOpen(true);
   };
@@ -80,19 +81,17 @@ const QuestionBank = () => {
     setForm(f => ({ ...f, options: opts }));
   };
 
-  const parseTags = (s: string) => s.split(',').map(t => t.trim()).filter(Boolean);
-
   const handleSaveManual = () => {
     const tags = parseTags(form.tags);
     if (editItem) {
-      updateBankQuestion({ ...editItem, text: form.text, options: form.options, correctAnswer: form.correctAnswer, explanation: form.explanation || undefined, categoryId: form.categoryId, tags });
+      updateBankQuestion.mutate({ ...editItem, text: form.text, options: form.options, correct_answer: form.correctAnswer, explanation: form.explanation || null, category_id: form.categoryId, tags });
     } else {
-      addBankQuestion({ text: form.text, options: form.options, correctAnswer: form.correctAnswer, explanation: form.explanation || undefined, categoryId: form.categoryId, tags });
+      addBankQuestion.mutate({ text: form.text, options: form.options, correct_answer: form.correctAnswer, explanation: form.explanation || null, category_id: form.categoryId, tags });
     }
     setIsDialogOpen(false);
   };
 
-  const handleDeleteSelected = () => { selected.forEach(id => deleteBankQuestion(id)); setSelected(new Set()); };
+  const handleDeleteSelected = () => { selected.forEach(id => deleteBankQuestion.mutate(id)); setSelected(new Set()); };
 
   const handleValidateJson = () => {
     setImportError('');
@@ -109,7 +108,7 @@ const QuestionBank = () => {
   };
   const handleImportJson = () => {
     const tags = parseTags(importTags);
-    jsonPreview.forEach(q => addBankQuestion({ ...q, categoryId: importCategoryId, tags }));
+    jsonPreview.forEach(q => addBankQuestion.mutate({ text: q.text, options: q.options, correct_answer: q.correctAnswer, explanation: q.explanation || null, category_id: importCategoryId, tags }));
     setJsonInput(''); setJsonPreview([]); setIsDialogOpen(false);
   };
 
@@ -130,7 +129,7 @@ const QuestionBank = () => {
   };
   const handleImportCsv = () => {
     const tags = parseTags(importTags);
-    csvPreview.forEach(q => addBankQuestion({ ...q, categoryId: importCategoryId, tags }));
+    csvPreview.forEach(q => addBankQuestion.mutate({ text: q.text, options: q.options, correct_answer: q.correctAnswer, explanation: null, category_id: importCategoryId, tags }));
     setCsvPreview([]); setIsDialogOpen(false);
   };
 
@@ -144,7 +143,6 @@ const QuestionBank = () => {
         <Button onClick={openAdd}><Plus className="mr-2 h-4 w-4" /> Tambah Soal</Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -166,11 +164,8 @@ const QuestionBank = () => {
         </Select>
       </div>
 
-      {/* Table */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 border rounded-lg bg-muted/20">
-          <p className="text-lg text-muted-foreground">Tidak ada soal ditemukan</p>
-        </div>
+        <div className="text-center py-16 border rounded-lg bg-muted/20"><p className="text-lg text-muted-foreground">Tidak ada soal ditemukan</p></div>
       ) : (
         <div className="rounded-lg border">
           <Table>
@@ -186,22 +181,18 @@ const QuestionBank = () => {
             </TableHeader>
             <TableBody>
               {filtered.map((q, i) => {
-                const cat = getCategoryById(q.categoryId);
+                const cat = categories.find(c => c.id === q.category_id);
                 return (
                   <TableRow key={q.id} className={cn(selected.has(q.id) && 'bg-muted/50')}>
                     <TableCell><Checkbox checked={selected.has(q.id)} onCheckedChange={() => toggleSelect(q.id)} /></TableCell>
                     <TableCell className="text-muted-foreground">{i + 1}</TableCell>
                     <TableCell className="max-w-xs truncate">{q.text}</TableCell>
                     <TableCell className="text-sm">{cat?.icon} {cat?.name}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {q.tags.map(t => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
-                      </div>
-                    </TableCell>
+                    <TableCell><div className="flex flex-wrap gap-1">{q.tags.map(t => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}</div></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openEdit(q)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteBankQuestion(q.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => deleteBankQuestion.mutate(q.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -212,7 +203,6 @@ const QuestionBank = () => {
         </div>
       )}
 
-      {/* Bulk action bar */}
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background border shadow-lg rounded-lg px-6 py-3 flex items-center gap-4 z-50">
           <span className="text-sm font-medium">{selected.size} soal dipilih</span>
@@ -220,12 +210,9 @@ const QuestionBank = () => {
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editItem ? 'Edit Soal Bank' : 'Tambah Soal ke Bank'}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{editItem ? 'Edit Soal Bank' : 'Tambah Soal ke Bank'}</DialogTitle></DialogHeader>
 
           {editItem ? (
             <div className="space-y-4">
@@ -283,13 +270,13 @@ const QuestionBank = () => {
 
               <TabsContent value="json" className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Kategori untuk import</Label>
+                  <div><Label>Kategori</Label>
                     <Select value={importCategoryId} onValueChange={setImportCategoryId}>
                       <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                       <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Tags untuk import</Label><Input value={importTags} onChange={e => setImportTags(e.target.value)} placeholder="N5, 文法" /></div>
+                  <div><Label>Tags</Label><Input value={importTags} onChange={e => setImportTags(e.target.value)} placeholder="N5, 文法" /></div>
                 </div>
                 <div><Label>Paste JSON</Label>
                   <Textarea className="min-h-[150px] font-mono text-xs" placeholder={`[\n  {"text":"...", "options":["A","B","C","D"], "correctAnswer":0}\n]`} value={jsonInput} onChange={e => setJsonInput(e.target.value)} />
@@ -297,30 +284,19 @@ const QuestionBank = () => {
                 {importError && <p className="text-sm text-destructive">{importError}</p>}
                 <Button variant="outline" onClick={handleValidateJson} disabled={!jsonInput.trim() || !importCategoryId}>Validasi</Button>
                 {jsonPreview.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Preview: {jsonPreview.length} soal</p>
-                    <div className="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
-                      {jsonPreview.map((q, i) => (
-                        <div key={i} className="text-sm border-b pb-2 last:border-0">
-                          <p className="font-medium">{i + 1}. {q.text}</p>
-                          <p className="text-green-700 text-xs">Jawaban: {q.options[q.correctAnswer]}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <DialogFooter className="mt-4"><Button onClick={handleImportJson}>Import {jsonPreview.length} Soal</Button></DialogFooter>
-                  </div>
+                  <DialogFooter className="mt-4"><Button onClick={handleImportJson}>Import {jsonPreview.length} Soal</Button></DialogFooter>
                 )}
               </TabsContent>
 
               <TabsContent value="csv" className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Kategori untuk import</Label>
+                  <div><Label>Kategori</Label>
                     <Select value={importCategoryId} onValueChange={setImportCategoryId}>
                       <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                       <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Tags untuk import</Label><Input value={importTags} onChange={e => setImportTags(e.target.value)} placeholder="N5, 文法" /></div>
+                  <div><Label>Tags</Label><Input value={importTags} onChange={e => setImportTags(e.target.value)} placeholder="N5, 文法" /></div>
                 </div>
                 <div>
                   <Label>Upload CSV</Label>
@@ -329,20 +305,7 @@ const QuestionBank = () => {
                 </div>
                 {importError && <p className="text-sm text-destructive">{importError}</p>}
                 {csvPreview.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Preview: {csvPreview.length} soal</p>
-                    <div className="max-h-48 overflow-y-auto border rounded">
-                      <Table>
-                        <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Pertanyaan</TableHead><TableHead>Jawaban</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                          {csvPreview.map((q, i) => (
-                            <TableRow key={i}><TableCell>{i + 1}</TableCell><TableCell className="max-w-xs truncate">{q.text}</TableCell><TableCell className="text-green-700">{q.options[q.correctAnswer]}</TableCell></TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <DialogFooter className="mt-4"><Button onClick={handleImportCsv} disabled={!importCategoryId}>Import {csvPreview.length} Soal</Button></DialogFooter>
-                  </div>
+                  <DialogFooter className="mt-4"><Button onClick={handleImportCsv}>Import {csvPreview.length} Soal</Button></DialogFooter>
                 )}
               </TabsContent>
             </Tabs>
