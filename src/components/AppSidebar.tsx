@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
-import { useApp } from '@/contexts/AppContext';
-import { BookOpen, LayoutDashboard, FolderOpen, HelpCircle, BarChart3, History, LogOut, Package, Database } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { BookOpen, LayoutDashboard, FolderOpen, HelpCircle, BarChart3, History, LogOut, Package, Database, Users } from 'lucide-react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, SidebarHeader, useSidebar,
@@ -19,13 +19,14 @@ const adminMenu = [
   { title: 'Paket Soal', url: '/admin/questions', icon: Package },
   { title: 'Bank Soal', url: '/admin/bank', icon: Database },
   { title: 'Hasil Ujian', url: '/admin/results', icon: BarChart3 },
+  { title: 'Kelola User', url: '/admin/users', icon: Users },
 ];
 
 export function AppSidebar() {
-  const { currentUser, logout } = useApp();
+  const { profile, logout } = useAuth();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = profile?.role === 'admin';
   const menu = isAdmin ? adminMenu : userMenu;
 
   return (
@@ -56,9 +57,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        {!collapsed && currentUser && (
+        {!collapsed && profile && (
           <div className="text-xs text-muted-foreground mb-2 truncate">
-            {currentUser.name} ({currentUser.role})
+            {profile.name} ({profile.role})
           </div>
         )}
         <Button variant="ghost" size="sm" className="w-full justify-start" onClick={logout}>

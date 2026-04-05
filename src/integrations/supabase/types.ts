@@ -14,16 +14,260 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bank_questions: {
+        Row: {
+          category_id: string
+          correct_answer: number
+          explanation: string | null
+          id: string
+          options: Json
+          tags: string[] | null
+          text: string
+        }
+        Insert: {
+          category_id: string
+          correct_answer?: number
+          explanation?: string | null
+          id?: string
+          options?: Json
+          tags?: string[] | null
+          text: string
+        }
+        Update: {
+          category_id?: string
+          correct_answer?: number
+          explanation?: string | null
+          id?: string
+          options?: Json
+          tags?: string[] | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_results: {
+        Row: {
+          answers: Json | null
+          category_id: string
+          correct_answers: number
+          date: string | null
+          id: string
+          package_id: string
+          score: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          category_id: string
+          correct_answers?: number
+          date?: string | null
+          id?: string
+          package_id: string
+          score?: number
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          category_id?: string
+          correct_answers?: number
+          date?: string | null
+          id?: string
+          package_id?: string
+          score?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "question_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      question_packages: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          id: string
+          is_published: boolean | null
+          name: string
+          period_label: string | null
+          target_questions: number | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_published?: boolean | null
+          name: string
+          period_label?: string | null
+          target_questions?: number | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_published?: boolean | null
+          name?: string
+          period_label?: string | null
+          target_questions?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_packages_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          correct_answer: number
+          explanation: string | null
+          id: string
+          options: Json
+          package_id: string
+          text: string
+        }
+        Insert: {
+          correct_answer?: number
+          explanation?: string | null
+          id?: string
+          options?: Json
+          package_id: string
+          text: string
+        }
+        Update: {
+          correct_answer?: number
+          explanation?: string | null
+          id?: string
+          options?: Json
+          package_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "question_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

@@ -1,9 +1,13 @@
-import { useApp } from '@/contexts/AppContext';
+import { useExamResults } from '@/hooks/useExamResults';
+import { useCategories } from '@/hooks/useCategories';
+import { usePackages } from '@/hooks/usePackages';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
 const ResultMonitoring = () => {
-  const { results, users, getCategoryById, getPackageById } = useApp();
+  const { data: results = [] } = useExamResults();
+  const { data: categories = [] } = useCategories();
+  const { data: packages = [] } = usePackages();
 
   return (
     <div>
@@ -15,7 +19,6 @@ const ResultMonitoring = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
                 <TableHead>Kategori</TableHead>
                 <TableHead>Paket</TableHead>
                 <TableHead>Skor</TableHead>
@@ -26,16 +29,14 @@ const ResultMonitoring = () => {
             </TableHeader>
             <TableBody>
               {results.map(r => {
-                const user = users.find(u => u.id === r.userId);
-                const cat = getCategoryById(r.categoryId);
-                const pkg = getPackageById(r.packageId);
+                const cat = categories.find(c => c.id === r.category_id);
+                const pkg = packages.find(p => p.id === r.package_id);
                 return (
                   <TableRow key={r.id}>
-                    <TableCell>{user?.name}</TableCell>
                     <TableCell>{cat?.icon} {cat?.name}</TableCell>
                     <TableCell>{pkg?.name}</TableCell>
                     <TableCell className="font-bold">{r.score}%</TableCell>
-                    <TableCell>{r.correctAnswers}/{r.totalQuestions}</TableCell>
+                    <TableCell>{r.correct_answers}/{r.total_questions}</TableCell>
                     <TableCell>{r.date}</TableCell>
                     <TableCell>
                       <Badge variant={r.score >= 60 ? 'default' : 'destructive'}>
